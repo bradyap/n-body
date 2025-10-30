@@ -1,0 +1,24 @@
+# no extension
+*
+!*.*
+!*/
+
+#vscode
+.vscode
+
+#macos
+.DS_Store
+*.dSYM/
+
+# c/ c++
+*.o
+*.out
+*.x
+*.bin
+*.so
+
+# py
+.venv
+__pycache__/
+*.pyc
+*.pyo
