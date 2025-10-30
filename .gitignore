@@ -3,6 +3,9 @@
 !*.*
 !*/
 
+# Exception for makefile
+!Makefile
+
 #vscode
 .vscode
 
