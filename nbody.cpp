@@ -4,9 +4,6 @@
 
 extern "C" { // Use plain c linkage so we can call from py with ctypes
 
-const double G = 1; // Gravitational constant
-// 6.674e-11
-
 void step(double* mass, double* pos, double* vel, int n, double dt, double G) {
     // pos and vel are flattened arrays of size 3*n
     std::vector<double> accel(n * 3, 0.0); // Temporary accelerations array

@@ -23,7 +23,8 @@ lib.step.argtypes = [ # Args for step function
     ndpointer(dtype=np.float64, ndim=1, flags="C_CONTIGUOUS"),  # pos
     ndpointer(dtype=np.float64, ndim=1, flags="C_CONTIGUOUS"),  # vel
     c_int, # n
-    c_double # dt
+    c_double, # dt
+    c_double # G
 ]
 
 # Sim parameters
@@ -38,7 +39,7 @@ for i in range(N):
 print()
 
 for step in range(steps):
-    lib.step(mass, pos, vel, N, dt) # Call c++ code to update 
+    lib.step(mass, pos, vel, N, dt, G) # Call c++ code to update 
 
     # Print updated positions and velocities
     print(f"Step " + str(step + 1))
