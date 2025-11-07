@@ -1,0 +1,22 @@
+CDS-351 HPC Project Starter
+
+The startcode includes:
+- Clearly marked placeholders for serial, `std::thread`, and OpenMP versions,
+- Timing sections using `std::chrono`.
+
+Notes:
+
+- Start by verifying the serial version works correctly.
+- Add a std::thread version (manual threading).
+- Add an OpenMP version
+- Record timing results for 1, 2, 4, 8, and 16 threads.
+- Report speedup and efficiency in your write-up
+- Include code snippets, plots, and a brief discussion in your presentation.
+
+Follow project brief sent to you earlier!
+
+---
+
+Compilation
+
+g++ -O3 -std=c++20 filename.cpp -o program_name -fopenmp
