@@ -1,14 +1,18 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 import nbody
 
 # Sim parameters
-G = 6.674e-11 # Gravitational constant
-#G = 1.0
-DT = 100000.0 # Time step in seconds
-NUM_STEPS = 20 # Number of steps to simulate
+#G = 6.674e-11 # Gravitational constant
+G = 0.001 # for testing
+DT = 0.001 # Time step in seconds
+NUM_STEPS = 1000000000 # Number of steps to simulate
 
+# Axis limits
+AXIS_MIN, AXIS_MAX = -200.0, 200.0
 
 def print_bodies(bodies_container, N):
     for i in range(N):
@@ -34,22 +38,57 @@ def main():
     bodies = nbody.BodiesContainer(N)
     
     # Initialize bodies
-    for i in range(N):
-        bodies.set_body(i, pos[i,0], pos[i,1], pos[i,2], vel[i,0], vel[i,1], vel[i,2], mass[i])
+    bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
     # Initial state printout
     print("Initial state")
     print_bodies(bodies, N)
     
+    # Plot setup
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # lock the box aspect so distances look right
+    ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
+    ax.set_xlim(AXIS_MIN, AXIS_MAX)
+    ax.set_ylim(AXIS_MIN, AXIS_MAX)
+    ax.set_zlim(AXIS_MIN, AXIS_MAX)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    
     for step in range(NUM_STEPS):
         nbody.compute_forces_serial(bodies, DT, G)
 
         # Print updated positions and velocities
-        print(f"Step " + str(step + 1))
-        print_bodies(bodies, N)
+        #print(f"Step " + str(step + 1))
+        #print_bodies(bodies, N)
 
-        # Visualize here
+        if (step + 1) % 400 == 0:
+            ax.clear()
+            xs = [bodies.get_body(i).x for i in range(N)]
+            ys = [bodies.get_body(i).y for i in range(N)]
+            zs = [bodies.get_body(i).z for i in range(N)]
 
+            ax.scatter(xs, ys, zs, s=8)
+
+            # re-apply fixed limits and labels after clear()
+            ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
+            ax.set_xlim(AXIS_MIN, AXIS_MAX)
+            ax.set_ylim(AXIS_MIN, AXIS_MAX)
+            ax.set_zlim(AXIS_MIN, AXIS_MAX)
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+
+            plt.draw()
+            plt.pause(0.001)
+
+    # Keep the last plot open
+    plt.ioff()
+    plt.show()
+    
     print("sim complete")
 
 if __name__ == '__main__':

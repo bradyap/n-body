@@ -36,6 +36,14 @@ public:
     int size() {
         return static_cast<int>(bodies.size());
     }
+
+    void set_all(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, 
+    const std::vector<double>& vx, const std::vector<double>& vy, const std::vector<double>& vz, const std::vector<double>& m) {
+        int n = static_cast<int>(bodies.size());
+        for (int i = 0; i < n; ++i) {
+            bodies[i] = {x[i], y[i], z[i], vx[i], vy[i], vz[i], m[i]};
+        }
+    }
 };
 
 void compute_forces_serial(BodiesContainer& container, double dt, double G) {
@@ -94,7 +102,8 @@ PYBIND11_MODULE(nbody, m) {
         .def(py::init<int>())
         .def("set_body", &BodiesContainer::set_body)
         .def("get_body", &BodiesContainer::get_body)
-        .def("size", &BodiesContainer::size);
-    
+        .def("size", &BodiesContainer::size)
+        .def("set_all", &BodiesContainer::set_all);
+
     m.def("compute_forces_serial", &compute_forces_serial);
 }

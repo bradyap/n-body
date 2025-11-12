@@ -1,10 +1,23 @@
-CXX = g++
-CXXFLAGS = -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -Wshadow -shared -undefined dynamic_lookup
-PYINCLUDES = $(shell python3 -m pybind11 --includes)
-PYSUFFIX = $(shell python3-config --extension-suffix)
+# What os?
+UNAME_S := $(shell uname -s)
+
+# Py flags and suffix
+PYINCLUDES := $(shell python3 -m pybind11 --includes)
+PYSUFFIX := $(shell python3-config --extension-suffix)
+
+CXX := c++
+CXXFLAGS := -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -shared
+
+# If macos specify dynamic lookup
+ifeq ($(UNAME_S),Darwin)
+    CXXFLAGS += -undefined dynamic_lookup
+endif
+
+TARGET := nbody$(PYSUFFIX)
+SRC := nbody.cpp
 
 all:
-	$(CXX) $(CXXFLAGS) $(PYINCLUDES) nbody.cpp -o nbody$(PYSUFFIX)
+	$(CXX) $(CXXFLAGS) $(PYINCLUDES) $(SRC) -o $(TARGET)
 
 clean:
-	rm -f nbody$(PYSUFFIX)
+	rm -f $(TARGET)
