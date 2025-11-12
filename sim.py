@@ -1,52 +1,59 @@
 import numpy as np
 import pandas as pd
-from ctypes import CDLL, c_int, c_double
-from numpy.ctypeslib import ndpointer
 
-# Read initial data for each body from csv
-# mass, x, y, z, vx, vy, vz
-initial_data = pd.read_csv('test_bodies.csv').to_numpy(dtype=np.float64)
-
-# Split data and flatten position/velocity arrays
-mass = np.ascontiguousarray(initial_data[:, 0])
-pos = np.ascontiguousarray(initial_data[:, 1:4].ravel())
-vel = np.ascontiguousarray(initial_data[:, 4:7].ravel())
-N = len(mass) # Number of bodies
-
-print(f"Loaded {N} bodies from csv")
-
-# Load shared library
-lib = CDLL("./libnbody.so")
-
-lib.step.argtypes = [ # Args for step function
-    ndpointer(dtype=np.float64, ndim=1, flags="C_CONTIGUOUS"),  # mass
-    ndpointer(dtype=np.float64, ndim=1, flags="C_CONTIGUOUS"),  # pos
-    ndpointer(dtype=np.float64, ndim=1, flags="C_CONTIGUOUS"),  # vel
-    c_int, # n
-    c_double, # dt
-    c_double # G
-]
+import nbody
 
 # Sim parameters
-G = 1; # Gravitational constant, 6.674e-11 in real life
-dt = 1; # Time step in seconds
-steps = 20 # Number of steps to simulate
+G = 6.674e-11 # Gravitational constant
+#G = 1.0
+DT = 100000.0 # Time step in seconds
+NUM_STEPS = 20 # Number of steps to simulate
 
-# Initial state printout
-print("Initial state")
-for i in range(N):
-        print(f"Body %d with mass %.3f: Pos(%.3f, %.3f, %.3f) Vel(%.3f, %.3f, %.3f)" % (i, mass[i], pos[3*i], pos[3*i+1], pos[3*i+2], vel[3*i], vel[3*i+1], vel[3*i+2]))
-print()
 
-for step in range(steps):
-    lib.step(mass, pos, vel, N, dt, G) # Call c++ code to update 
-
-    # Print updated positions and velocities
-    print(f"Step " + str(step + 1))
+def print_bodies(bodies_container, N):
     for i in range(N):
-        print(f"Body %d with mass %.3f: Pos(%.3f, %.3f, %.3f) Vel(%.3f, %.3f, %.3f)" % (i, mass[i], pos[3*i], pos[3*i+1], pos[3*i+2], vel[3*i], vel[3*i+1], vel[3*i+2]))
+        b = bodies_container.get_body(i)
+        print(f"Body %d with mass %.3f: Pos(%.3f, %.3f, %.3f) Vel(%.3f, %.3f, %.3f)" % (i, b.m, b.x, b.y, b.z, b.vx, b.vy, b.vz))
     print()
-    
-    # Visualize here
 
-print("Sim complete")
+
+def main():
+    # Read initial data for each body from csv
+    # x, y, z, vx, vy, vz, mass
+    initial_data = pd.read_csv('test_bodies.csv').to_numpy(dtype=np.float64)
+
+    # Split data
+    pos = initial_data[:, 0:3]
+    vel = initial_data[:, 3:6]
+    mass = initial_data[:, 6]
+    N = len(mass)  # Number of bodies
+
+    print(f"Loaded {N} bodies from csv")
+
+    # Create bodies container
+    bodies = nbody.BodiesContainer(N)
+    
+    # Initialize bodies
+    for i in range(N):
+        bodies.set_body(i, pos[i,0], pos[i,1], pos[i,2], vel[i,0], vel[i,1], vel[i,2], mass[i])
+
+    # Initial state printout
+    print("Initial state")
+    print_bodies(bodies, N)
+    
+    for step in range(NUM_STEPS):
+        nbody.compute_forces_serial(bodies, DT, G)
+
+        # Print updated positions and velocities
+        print(f"Step " + str(step + 1))
+        print_bodies(bodies, N)
+
+        # Visualize here
+
+    print("sim complete")
+
+if __name__ == '__main__':
+    main()
+
+
+

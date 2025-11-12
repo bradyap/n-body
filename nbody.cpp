@@ -1,68 +1,100 @@
-#include <vector>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 #include <cmath>
 #include <iostream>
+#include <vector>
 
-extern "C" { // Use plain c linkage so we can call from py with ctypes
+namespace py = pybind11;
 
-void step(double* mass, double* pos, double* vel, int n, double dt, double G) {
-    // pos and vel are flattened arrays of size 3*n
-    std::vector<double> accel(n * 3, 0.0); // Temporary accelerations array
+struct Body {
+    double x, y, z;     // position
+    double vx, vy, vz;  // velocity
+    double m;           // mass
+};
+
+// Wrapper class for the vector of bodies
+class BodiesContainer {
+public:
+    std::vector<Body> bodies;
+    
+    BodiesContainer(int n) : bodies(n) {}
+    
+    void set_body(int i, double x, double y, double z, double vx, double vy, double vz, double m) {
+        if (i >= 0 && i < static_cast<int>(bodies.size())) {
+            bodies[i] = {x, y, z, vx, vy, vz, m};
+        }
+    }
+    
+    Body get_body(int i) const {
+        if (i >= 0 && i < static_cast<int>(bodies.size())) {
+            return bodies[i];
+        }
+        return Body{};
+    }
+    
+    int size() {
+        return static_cast<int>(bodies.size());
+    }
+};
+
+void compute_forces_serial(BodiesContainer& container, double dt, double G) {
+    auto& bodies = container.bodies;
+    int n = static_cast<int>(bodies.size());
 
     // Compute accelerations for each body
     for (int i = 0; i < n; ++i) {
-        // Position of body i
-        double xi = pos[3*i];
-        double yi = pos[3*i + 1];
-        double zi = pos[3*i + 2];
-
-        // These will store accel as we calculate them
-        double ax = 0.0;
-        double ay = 0.0;
-        double az = 0.0;
+        double ax = 0.0, ay = 0.0, az = 0.0;
 
         for (int j = 0; j < n; ++j) {
-            if (i != j) { // Iterating through all other bodies
-                // Position of body j
-                double xj = pos[3*j];
-                double yj = pos[3*j + 1];
-                double zj = pos[3*j + 2];
+            if (i == j) continue;
 
-                // 3d dist components
-                double dx = xj - xi;
-                double dy = yj - yi;
-                double dz = zj - zi;
+            double dx = bodies[j].x - bodies[i].x;
+            double dy = bodies[j].y - bodies[i].y;
+            double dz = bodies[j].z - bodies[i].z;
 
-                double distSqr = dx*dx + dy*dy + dz*dz + 1e-10; // r^2, adding a small term to avoid div by 0
-                double r = std::sqrt(distSqr); // r
-                double invr3 = 1.0 / (r * r * r); // 1/r^3
+            double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+            double r = std::sqrt(r2);
+            double invr3 = 1.0 / (r * r * r);
+            double accel_coeff = G * bodies[j].m * invr3;
 
-                double f = G * mass[j] * invr3; // Gravitational force magnitude
-
-                // Apply force to accel components for body i
-                ax += f * dx;
-                ay += f * dy;
-                az += f * dz;
-            }
+            ax += accel_coeff * dx;
+            ay += accel_coeff * dy;
+            az += accel_coeff * dz;
         }
 
-        // Store computed acceleration
-        accel[3*i] = ax;
-        accel[3*i + 1] = ay;
-        accel[3*i + 2] = az;
+        // update velocity from accel
+        bodies[i].vx += ax * dt;
+        bodies[i].vy += ay * dt;
+        bodies[i].vz += az * dt;
     }
 
-    // Update velocities and positions
-    for (int i = 0; i < n; ++i) {
-        // Update velocity from accel: v = v + a*dt
-        vel[3*i] += accel[3*i] * dt;
-        vel[3*i + 1] += accel[3*i + 1] * dt;
-        vel[3*i + 2] += accel[3*i + 2] * dt;
-
-        // Update position from velocity: x = x + v*dt
-        pos[3*i] += vel[3*i] * dt;
-        pos[3*i + 1] += vel[3*i + 1] * dt;
-        pos[3*i + 2] += vel[3*i + 2] * dt;
+    // update positions after all velocities are updated
+    for (auto& b : bodies) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.z += b.vz * dt;
     }
 }
 
+PYBIND11_MODULE(nbody, m) {
+    m.doc() = "N-body simulation module";
+
+    py::class_<Body>(m, "Body")
+        .def(py::init<>())
+        .def_readwrite("x", &Body::x)
+        .def_readwrite("y", &Body::y)
+        .def_readwrite("z", &Body::z)
+        .def_readwrite("vx", &Body::vx)
+        .def_readwrite("vy", &Body::vy)
+        .def_readwrite("vz", &Body::vz)
+        .def_readwrite("m", &Body::m);
+    
+    py::class_<BodiesContainer>(m, "BodiesContainer")
+        .def(py::init<int>())
+        .def("set_body", &BodiesContainer::set_body)
+        .def("get_body", &BodiesContainer::get_body)
+        .def("size", &BodiesContainer::size);
+    
+    m.def("compute_forces_serial", &compute_forces_serial);
 }

@@ -1,10 +1,10 @@
 CXX = g++
-CXXFLAGS = -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -Wshadow 
+CXXFLAGS = -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -Wshadow -shared -undefined dynamic_lookup
+PYINCLUDES = $(shell python3 -m pybind11 --includes)
+PYSUFFIX = $(shell python3-config --extension-suffix)
 
-all: libnbody.so
-
-libnbody.so: nbody.cpp
-	$(CXX) $(CXXFLAGS) -shared nbody.cpp -o libnbody.so
+all:
+	$(CXX) $(CXXFLAGS) $(PYINCLUDES) nbody.cpp -o nbody$(PYSUFFIX)
 
 clean:
-	rm -f libnbody.so
+	rm -f nbody$(PYSUFFIX)
