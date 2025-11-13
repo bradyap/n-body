@@ -51,33 +51,36 @@ void compute_forces_serial(BodiesContainer& container, double dt, double G) {
     int n = static_cast<int>(bodies.size());
 
     // Compute accelerations for each body
-    for (int i = 0; i < n; ++i) {
-        double ax = 0.0, ay = 0.0, az = 0.0;
+    for (int i = 0; i < n; ++i) { // Iterate through each body
+        double ax = 0.0, ay = 0.0, az = 0.0; // Stores accel temporarily
 
-        for (int j = 0; j < n; ++j) {
+        for (int j = 0; j < n; ++j) { // Iterate through all other bodies (not i)
             if (i == j) continue;
 
+            // Distance components between bodies i and j 
             double dx = bodies[j].x - bodies[i].x;
             double dy = bodies[j].y - bodies[i].y;
             double dz = bodies[j].z - bodies[i].z;
 
+            // Compute gravitational acceleration on body i due to body j
             double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
             double r = std::sqrt(r2);
             double invr3 = 1.0 / (r * r * r);
             double accel_coeff = G * bodies[j].m * invr3;
 
+            // Apply acceleration components
             ax += accel_coeff * dx;
             ay += accel_coeff * dy;
             az += accel_coeff * dz;
         }
 
-        // update velocity from accel
+        // Update velocity from accel
         bodies[i].vx += ax * dt;
         bodies[i].vy += ay * dt;
         bodies[i].vz += az * dt;
     }
 
-    // update positions after all velocities are updated
+    // Update positions after all velocities are updated
     for (auto& b : bodies) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
