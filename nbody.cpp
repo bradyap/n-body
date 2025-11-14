@@ -4,13 +4,14 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <thread>
 
 namespace py = pybind11;
 
 struct Body {
-    double x, y, z;     // position
-    double vx, vy, vz;  // velocity
-    double m;           // mass
+    double x, y, z; // position
+    double vx, vy, vz; // velocity
+    double m; // mass
 };
 
 // Wrapper class for the vector of bodies
@@ -88,6 +89,67 @@ void compute_forces_serial(BodiesContainer& container, double dt, double G) {
     }
 }
 
+void compute_forces_threaded(BodiesContainer& container, double dt, double G, int num_threads) {
+    auto& bodies = container.bodies;
+    int n = static_cast<int>(bodies.size());
+
+    auto compute_worker = [&](int start, int end) {
+        // Compute accelerations for each body
+        for (int i = start; i < end; ++i) { // Iterate through each body
+            double ax = 0.0, ay = 0.0, az = 0.0; // Stores accel temporarily
+
+            for (int j = 0; j < n; ++j) { // Iterate through all other bodies (not i)
+                if (i == j) continue;
+
+                // Distance components between bodies i and j 
+                double dx = bodies[j].x - bodies[i].x;
+                double dy = bodies[j].y - bodies[i].y;
+                double dz = bodies[j].z - bodies[i].z;
+
+                // Compute gravitational acceleration on body i due to body j
+                double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+                double r = std::sqrt(r2);
+                double invr3 = 1.0 / (r * r * r);
+                double accel_coeff = G * bodies[j].m * invr3;
+
+                // Apply acceleration components
+                ax += accel_coeff * dx;
+                ay += accel_coeff * dy;
+                az += accel_coeff * dz;
+            }
+
+            // Update velocity from accel
+            bodies[i].vx += ax * dt;
+            bodies[i].vy += ay * dt;
+            bodies[i].vz += az * dt;
+        }
+    };
+
+    // Create vector of threads and divide work
+    std::vector<std::thread> threads;
+    int chunk_size = n / num_threads;
+
+    // Fork threads
+    for (int t = 0; t < num_threads; ++t) {
+        int start = t * chunk_size;
+        int end = (start + chunk_size < n) ? start + chunk_size : n;
+        threads.emplace_back(compute_worker, start, end);
+    }
+
+    // Join threads
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // Update positions after all velocities are updated
+    // This is fast as a serial operation
+    for (auto& b : bodies) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.z += b.vz * dt;
+    }
+}
+
 PYBIND11_MODULE(nbody, m) {
     m.doc() = "N-body simulation module";
 
@@ -108,5 +170,6 @@ PYBIND11_MODULE(nbody, m) {
         .def("size", &BodiesContainer::size)
         .def("set_all", &BodiesContainer::set_all);
 
-    m.def("compute_forces_serial", &compute_forces_serial);
+    m.def("compute_forces_serial", &compute_forces_serial, "Computes gravitational forces serially");
+    m.def("compute_forces_threaded", &compute_forces_threaded, "Computes gravitational forces using std::thread");
 }

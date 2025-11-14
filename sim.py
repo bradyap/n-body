@@ -5,14 +5,18 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import nbody
 
+# Input file name
+FNAME = "test_bodies1000.csv"
+
 # Sim parameters
 #G = 6.674e-11 # Gravitational constant
 G = 0.001 # for testing
 DT = 0.001 # Time step in seconds
 NUM_STEPS = 1000000000 # Number of steps to simulate
 
-# Axis limits
-AXIS_MIN, AXIS_MAX = -200.0, 200.0
+# Visualization config
+AXIS_MIN, AXIS_MAX = -200.0, 200.0 # Axis size of plot
+FRAMES_BETWEEN_UPDATES = 250 # How many sim steps between plot updates
 
 def print_bodies(bodies_container, N):
     for i in range(N):
@@ -24,7 +28,7 @@ def print_bodies(bodies_container, N):
 def main():
     # Read initial data for each body from csv
     # x, y, z, vx, vy, vz, mass
-    initial_data = pd.read_csv('test_bodies.csv').to_numpy(dtype=np.float64)
+    initial_data = pd.read_csv(FNAME).to_numpy(dtype=np.float64)
 
     # Split data
     pos = initial_data[:, 0:3]
@@ -59,13 +63,14 @@ def main():
     ax.set_zlabel('Z')
     
     for step in range(NUM_STEPS):
-        nbody.compute_forces_serial(bodies, DT, G)
+        #nbody.compute_forces_serial(bodies, DT, G)
+        nbody.compute_forces_threaded(bodies, DT, G, 32)
 
         # Print updated positions and velocities
         #print(f"Step " + str(step + 1))
         #print_bodies(bodies, N)
 
-        if (step + 1) % 400 == 0:
+        if (step + 1) % FRAMES_BETWEEN_UPDATES == 0:
             ax.clear()
             xs = [bodies.get_body(i).x for i in range(N)]
             ys = [bodies.get_body(i).y for i in range(N)]
