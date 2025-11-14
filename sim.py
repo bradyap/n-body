@@ -53,7 +53,7 @@ def main():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
-    # lock the box aspect so distances look right
+    # Lock the box aspect so distances look right
     ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
     ax.set_xlim(AXIS_MIN, AXIS_MAX)
     ax.set_ylim(AXIS_MIN, AXIS_MAX)

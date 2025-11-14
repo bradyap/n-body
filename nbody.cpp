@@ -9,9 +9,9 @@
 namespace py = pybind11;
 
 struct Body {
-    double x, y, z; // position
-    double vx, vy, vz; // velocity
-    double m; // mass
+    double x, y, z; // Position
+    double vx, vy, vz; // Velocity
+    double m; // Mass
 };
 
 // Wrapper class for the vector of bodies
@@ -93,6 +93,7 @@ void compute_forces_threaded(BodiesContainer& container, double dt, double G, in
     auto& bodies = container.bodies;
     int n = static_cast<int>(bodies.size());
 
+    // Define worker function - [&] inherits local variables by reference
     auto compute_worker = [&](int start, int end) {
         // Compute accelerations for each body
         for (int i = start; i < end; ++i) { // Iterate through each body
@@ -129,7 +130,7 @@ void compute_forces_threaded(BodiesContainer& container, double dt, double G, in
     std::vector<std::thread> threads;
     int chunk_size = n / num_threads;
 
-    // Fork threads
+    // Fork threads and assign them a chunk
     for (int t = 0; t < num_threads; ++t) {
         int start = t * chunk_size;
         int end = (start + chunk_size < n) ? start + chunk_size : n;
