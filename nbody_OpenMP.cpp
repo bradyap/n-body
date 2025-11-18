@@ -128,7 +128,6 @@ void compute_forces_open_mp(BodiesContainer& container, double dt, double G, int
         bodies[i].vz += az * dt;
         }
     }
-    
     for (auto& b : bodies) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;

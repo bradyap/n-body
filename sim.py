@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import nbody_OpenMP
 
 # Input file name
-FNAME = "test_bodies1000.csv"
+FNAME = "test_bodies.csv"
 
 # Sim parameters
 #G = 6.674e-11 # Gravitational constant
@@ -90,7 +90,7 @@ def main():
     plt.pause(0.001)
 
     # ---------------- Animating Plot ----------------
-    print("Animating...")
+    print("\nAnimating...")
     count = 0
     for xs, ys, zs in all_positions:
         scatter._offsets3d = (xs, ys, zs)
