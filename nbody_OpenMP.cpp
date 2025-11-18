@@ -83,11 +83,13 @@ void compute_forces_serial(BodiesContainer& container, double dt, double G) {
     }
 
     // Update positions after all velocities are updated
-    for (auto& b : bodies) {
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-        b.z += b.vz * dt;
+    #pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+        bodies[i].x += bodies[i].vx * dt;
+        bodies[i].y += bodies[i].vy * dt;
+        bodies[i].z += bodies[i].vz * dt;
     }
+
 }
 
 void compute_forces_open_mp(BodiesContainer& container, double dt, double G, int number_threads) {

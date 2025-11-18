@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -12,7 +13,7 @@ FNAME = "test_bodies1000.csv"
 #G = 6.674e-11 # Gravitational constant
 G = 0.001 # for testing
 DT = 0.001 # Time step in seconds
-NUM_STEPS = 1000000000 # Number of steps to simulate
+NUM_STEPS = 100000 # Number of steps to simulate
 
 # Visualization config
 AXIS_MIN, AXIS_MAX = -200.0, 200.0 # Axis size of plot
@@ -23,6 +24,16 @@ def print_bodies(bodies_container, N):
         b = bodies_container.get_body(i)
         print(f"Body %d with mass %.3f: Pos(%.3f, %.3f, %.3f) Vel(%.3f, %.3f, %.3f)" % (i, b.m, b.x, b.y, b.z, b.vx, b.vy, b.vz))
     print()
+
+
+GREEN = "\033[92m"
+RED = "\033[91m"
+RESET = "\033[0m"
+def percentage_bar(current, total, bar_length=30):
+    percent = (current + 1) / total
+    filled_length = int(bar_length * percent)
+    bar = f"{GREEN}{'█' * filled_length}{RED}{' ' * (bar_length - filled_length)}{RESET}"
+    print(f'\r|{bar}| {percent*100:.01f}% Completed', end='')
 
 
 def main():
@@ -44,57 +55,54 @@ def main():
     # Initialize bodies
     bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
-    # Initial state printout
-    print("Initial state")
-    print_bodies(bodies, N)
-    
-    # Plot setup
+    # ---------------- Precomputing Positions ----------------
+
+    print("Precomputing positions...")
+    all_positions = []  # list of tuples (xs, ys, zs)
+    for step in range(NUM_STEPS):
+        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 32)
+        if step % FRAMES_BETWEEN_UPDATES == 0:
+            xs = [bodies.get_body(i).x for i in range(N)]
+            ys = [bodies.get_body(i).y for i in range(N)]
+            zs = [bodies.get_body(i).z for i in range(N)]
+            all_positions.append((xs, ys, zs))
+            percentage_bar(step, NUM_STEPS)
+
+    print(f"\nPrecomputation complete: {len(all_positions)} frames")
+
+    # ---------------- Setup plot ----------------
     plt.ion()
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    
-    # Lock the box aspect so distances look right
-    ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
+
+    ax.set_box_aspect([AXIS_MAX - AXIS_MIN]*3)
     ax.set_xlim(AXIS_MIN, AXIS_MAX)
     ax.set_ylim(AXIS_MIN, AXIS_MAX)
     ax.set_zlim(AXIS_MIN, AXIS_MAX)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    
-    for step in range(NUM_STEPS):
-        #nbody.compute_forces_serial(bodies, DT, G)
-        nbody_OpenMP.compute_forces_open_mp(bodies, DT, G, 32)
 
-        # Print updated positions and velocities
-        #print(f"Step " + str(step + 1))
-        #print_bodies(bodies, N)
+    # Initialize scatter with first frame
+    xs, ys, zs = all_positions[0]
+    scatter = ax.scatter(xs, ys, zs, s=2)
+    plt.draw()
+    plt.pause(0.001)
 
-        if (step + 1) % FRAMES_BETWEEN_UPDATES == 0:
-            ax.clear()
-            xs = [bodies.get_body(i).x for i in range(N)]
-            ys = [bodies.get_body(i).y for i in range(N)]
-            zs = [bodies.get_body(i).z for i in range(N)]
+    # ---------------- Animating Plot ----------------
+    print("Animating...")
+    count = 0
+    for xs, ys, zs in all_positions:
+        scatter._offsets3d = (xs, ys, zs)
+        plt.draw()
+        percentage_bar(count, len(all_positions))
+        count += 1
+        plt.pause(0.001)
+    print("\nSimulation Plotted\n")
 
-            ax.scatter(xs, ys, zs, s=8)
-
-            # re-apply fixed limits and labels after clear()
-            ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
-            ax.set_xlim(AXIS_MIN, AXIS_MAX)
-            ax.set_ylim(AXIS_MIN, AXIS_MAX)
-            ax.set_zlim(AXIS_MIN, AXIS_MAX)
-            ax.set_xlabel('X')
-            ax.set_ylabel('Y')
-            ax.set_zlabel('Z')
-
-            plt.draw()
-            plt.pause(0.001)
-
-    # Keep the last plot open
     plt.ioff()
     plt.show()
-    
-    print("sim complete")
+    print("Simulation complete")
 
 if __name__ == '__main__':
     main()

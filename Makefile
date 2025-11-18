@@ -13,7 +13,7 @@ ifeq ($(UNAME_S),Darwin)
     CXXFLAGS += -undefined dynamic_lookup
 endif
 
-TARGET := nbody$(PYSUFFIX)
+TARGET := nbody_OpenMP$(PYSUFFIX)
 SRC := nbody_OpenMP.cpp
 
 all:
