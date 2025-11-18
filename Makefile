@@ -6,7 +6,7 @@ PYINCLUDES := $(shell python3 -m pybind11 --includes)
 PYSUFFIX := $(shell python3-config --extension-suffix)
 
 CXX := c++
-CXXFLAGS := -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -shared
+CXXFLAGS := -g -std=c++20 -fPIC -Wall -Wextra -Wpedantic -shared -fopenmp
 
 # If macos specify dynamic lookup
 ifeq ($(UNAME_S),Darwin)
@@ -14,7 +14,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 TARGET := nbody$(PYSUFFIX)
-SRC := nbody.cpp
+SRC := nbody_OpenMP.cpp
 
 all:
 	$(CXX) $(CXXFLAGS) $(PYINCLUDES) $(SRC) -o $(TARGET)

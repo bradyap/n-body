@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-import nbody
+import nbody_OpenMP
 
 # Input file name
 FNAME = "test_bodies1000.csv"
@@ -39,7 +39,7 @@ def main():
     print(f"Loaded {N} bodies from csv")
 
     # Create bodies container
-    bodies = nbody.BodiesContainer(N)
+    bodies = nbody_OpenMP.BodiesContainer(N)
     
     # Initialize bodies
     bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
@@ -64,7 +64,7 @@ def main():
     
     for step in range(NUM_STEPS):
         #nbody.compute_forces_serial(bodies, DT, G)
-        nbody.compute_forces_threaded(bodies, DT, G, 32)
+        nbody_OpenMP.compute_forces_open_mp(bodies, DT, G, 32)
 
         # Print updated positions and velocities
         #print(f"Step " + str(step + 1))
