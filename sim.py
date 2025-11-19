@@ -3,17 +3,18 @@ import pandas as pd
 import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
 import nbody_OpenMP
 
 # Input file name
-FNAME = "test_bodies.csv"
+FNAME = "test_bodies1000.csv"
 
 # Sim parameters
 #G = 6.674e-11 # Gravitational constant
 G = 0.001 # for testing
 DT = 0.001 # Time step in seconds
-NUM_STEPS = 100000 # Number of steps to simulate
+NUM_STEPS = 50000 # Number of steps to simulate
 
 # Visualization config
 AXIS_MIN, AXIS_MAX = -200.0, 200.0 # Axis size of plot
@@ -71,7 +72,6 @@ def main():
     print(f"\nPrecomputation complete: {len(all_positions)} frames")
 
     # ---------------- Setup plot ----------------
-    plt.ion()
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -86,26 +86,30 @@ def main():
     # Initialize scatter with first frame
     xs, ys, zs = all_positions[0]
     scatter = ax.scatter(xs, ys, zs, s=2)
-    plt.draw()
-    plt.pause(0.001)
 
     # ---------------- Animating Plot ----------------
     print("\nAnimating...")
-    count = 0
-    for xs, ys, zs in all_positions:
+    def update(frame):
+        xs, ys, zs = all_positions[frame]
         scatter._offsets3d = (xs, ys, zs)
-        plt.draw()
-        percentage_bar(count, len(all_positions))
-        count += 1
-        plt.pause(0.001)
-    print("\nSimulation Plotted\n")
+        ax.set_title(f"Step {frame*FRAMES_BETWEEN_UPDATES}")  # Optional title
+        return scatter,
+    
+    ani = FuncAnimation(
+        fig, 
+        update, 
+        frames=len(all_positions), 
+        interval=25,  # milliseconds between frames
+        blit=False    # Must be False for 3D scatter plots
+    )
 
-    plt.ioff()
     plt.show()
-    print("Simulation complete")
+    print("Simulation Complete")
+    return ani
+
 
 if __name__ == '__main__':
-    main()
+    ani = main()
 
 
 
