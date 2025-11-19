@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
+import time
 
 import nbody_OpenMP
 
@@ -14,7 +15,7 @@ FNAME = "test_bodies1000.csv"
 #G = 6.674e-11 # Gravitational constant
 G = 0.001 # for testing
 DT = 0.001 # Time step in seconds
-NUM_STEPS = 50000 # Number of steps to simulate
+NUM_STEPS = 100000 # Number of steps to simulate
 
 # Visualization config
 AXIS_MIN, AXIS_MAX = -200.0, 200.0 # Axis size of plot
@@ -41,6 +42,7 @@ def main():
     # Read initial data for each body from csv
     # x, y, z, vx, vy, vz, mass
     initial_data = pd.read_csv(FNAME).to_numpy(dtype=np.float64)
+    times = []
 
     # Split data
     pos = initial_data[:, 0:3]
@@ -61,7 +63,14 @@ def main():
     print("Precomputing positions...")
     all_positions = []  # list of tuples (xs, ys, zs)
     for step in range(NUM_STEPS):
+        start_time = time.perf_counter()
         nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 32)
+        end_time = time.perf_counter()
+        
+        elapsed_time = end_time - start_time
+        
+        times.append(elapsed_time)
+
         if step % FRAMES_BETWEEN_UPDATES == 0:
             xs = [bodies.get_body(i).x for i in range(N)]
             ys = [bodies.get_body(i).y for i in range(N)]
@@ -70,6 +79,11 @@ def main():
             percentage_bar(step, NUM_STEPS)
 
     print(f"\nPrecomputation complete: {len(all_positions)} frames")
+
+    with open("times.txt", 'w') as file:
+        for item in times:
+            # Convert each item to a string and add a newline character
+            file.write(str(item) + "\n")
 
     # ---------------- Setup plot ----------------
     fig = plt.figure()
