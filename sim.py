@@ -63,13 +63,7 @@ def main():
     print("Precomputing positions...")
     all_positions = []  # list of tuples (xs, ys, zs)
     for step in range(NUM_STEPS):
-        start_time = time.perf_counter()
         nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 32)
-        end_time = time.perf_counter()
-        
-        elapsed_time = end_time - start_time
-        
-        times.append(elapsed_time)
 
         if step % FRAMES_BETWEEN_UPDATES == 0:
             xs = [bodies.get_body(i).x for i in range(N)]
@@ -79,11 +73,6 @@ def main():
             percentage_bar(step, NUM_STEPS)
 
     print(f"\nPrecomputation complete: {len(all_positions)} frames")
-
-    with open("times.txt", 'w') as file:
-        for item in times:
-            # Convert each item to a string and add a newline character
-            file.write(str(item) + "\n")
 
     # ---------------- Setup plot ----------------
     fig = plt.figure()
