@@ -195,6 +195,36 @@ void compute_forces_omp(BodiesContainer& container, double dt, double G, int num
     }
 }
 
+double benchmark_serial(BodiesContainer& container, double dt, double G, int number_steps=100) {
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int step = 0; step < number_steps; ++step) {
+        compute_forces_serial(container, dt, G);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    return elapsed.count() / number_steps;
+}
+
+double benchmark_threaded(BodiesContainer& container, double dt, double G, int number_threads, int number_steps=100) {
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int step = 0; step < number_steps; ++step) {
+        compute_forces_threaded(container, dt, G, number_threads);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    return elapsed.count() / number_steps;
+}
+
+double benchmark_omp(BodiesContainer& container, double dt, double G, int number_threads, int number_steps=100) {
+    double start = omp_get_wtime();
+    for (int step = 0; step < number_steps; ++step) {
+        compute_forces_omp(container, dt, G, number_threads);
+    }
+    double end = omp_get_wtime();
+    double elapsed = end - start;
+    return elapsed / number_steps;
+}
+
 PYBIND11_MODULE(nbody, m) {
     m.doc() = "N-body simulation module";
 
