@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <omp.h>
 
 namespace py = pybind11;
 
@@ -89,7 +90,7 @@ void compute_forces_serial(BodiesContainer& container, double dt, double G) {
     }
 }
 
-void compute_forces_threaded(BodiesContainer& container, double dt, double G, int num_threads) {
+void compute_forces_threaded(BodiesContainer& container, double dt, double G, int number_threads) {
     auto& bodies = container.bodies;
     int n = static_cast<int>(bodies.size());
 
@@ -128,10 +129,10 @@ void compute_forces_threaded(BodiesContainer& container, double dt, double G, in
 
     // Create vector of threads and divide work
     std::vector<std::thread> threads;
-    int chunk_size = n / num_threads;
+    int chunk_size = n / number_threads;
 
     // Fork threads and assign them a chunk
-    for (int t = 0; t < num_threads; ++t) {
+    for (int t = 0; t < number_threads; ++t) {
         int start = t * chunk_size;
         int end = (start + chunk_size < n) ? start + chunk_size : n;
         threads.emplace_back(compute_worker, start, end);
@@ -144,6 +145,49 @@ void compute_forces_threaded(BodiesContainer& container, double dt, double G, in
 
     // Update positions after all velocities are updated
     // This is fast as a serial operation
+    for (auto& b : bodies) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.z += b.vz * dt;
+    }
+}
+
+void compute_forces_omp(BodiesContainer& container, double dt, double G, int number_threads) {
+    auto& bodies = container.bodies;
+    int n = static_cast<int>(bodies.size());
+
+    #pragma omp parallel num_threads(number_threads) 
+    {
+        #pragma omp for schedule(dynamic)
+        for (int i = 0; i < n; ++i) { // Iterate through each body
+            double ax = 0.0, ay = 0.0, az = 0.0; // Stores accel temporarily
+
+            for (int j = 0; j < n; ++j) { // Iterate through all other bodies (not i)
+                if (i == j) continue;
+
+                // Distance components between bodies i and j 
+                double dx = bodies[j].x - bodies[i].x;
+                double dy = bodies[j].y - bodies[i].y;
+                double dz = bodies[j].z - bodies[i].z;
+
+                // Compute gravitational acceleration on body i due to body j
+                double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+                double r = std::sqrt(r2);
+                double invr3 = 1.0 / (r * r * r);
+                double accel_coeff = G * bodies[j].m * invr3;
+
+                // Apply acceleration components
+                ax += accel_coeff * dx;
+                ay += accel_coeff * dy;
+                az += accel_coeff * dz;
+            }
+
+        // Update velocity from accel
+        bodies[i].vx += ax * dt;
+        bodies[i].vy += ay * dt;
+        bodies[i].vz += az * dt;
+        }
+    }
     for (auto& b : bodies) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
@@ -173,4 +217,5 @@ PYBIND11_MODULE(nbody, m) {
 
     m.def("compute_forces_serial", &compute_forces_serial, "Computes gravitational forces serially");
     m.def("compute_forces_threaded", &compute_forces_threaded, "Computes gravitational forces using std::thread");
+    m.def("compute_forces_omp", &compute_forces_omp, "Computes gravitational forces using OpenMP");
 }

@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import nbody
 
 # Input file name
-FNAME = "test_bodies1000.csv"
+FNAME = "test_bodies300.csv"
 
 # Sim parameters
 #G = 6.674e-11 # Gravitational constant
@@ -16,7 +16,7 @@ NUM_STEPS = 1000000000 # Number of steps to simulate
 
 # Visualization config
 AXIS_MIN, AXIS_MAX = -200.0, 200.0 # Axis size of plot
-FRAMES_BETWEEN_UPDATES = 250 # How many sim steps between plot updates
+FRAMES_BETWEEN_UPDATES = 100 # How many sim steps between plot updates
 
 def print_bodies(bodies_container, N):
     for i in range(N):
@@ -64,7 +64,8 @@ def main():
     
     for step in range(NUM_STEPS):
         #nbody.compute_forces_serial(bodies, DT, G)
-        nbody.compute_forces_threaded(bodies, DT, G, 32)
+        #nbody.compute_forces_threaded(bodies, DT, G, 16)
+        nbody.compute_forces_omp(bodies, DT, G, 32)
 
         # Print updated positions and velocities
         #print(f"Step " + str(step + 1))
