@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
@@ -10,17 +9,17 @@ import nbody_OpenMP
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
-def percentage_bar(current, total, bar_length=30):
+def percentage_bar(current, total, N, bar_length=30,):
     percent = (current) / total
     filled_length = int(bar_length * percent)
     bar = f"{GREEN}{'█' * filled_length}{RED}{' ' * (bar_length - filled_length)}{RESET}"
-    print(f'\r|{bar}| {percent*100:.01f}% Completed', end='')
-
+    print(f'\r|{bar}| {percent*100:.01f}% Completed  N = {N}', end='')
 
 G = 0.001
 DT = 0.001
 N_list = [500, 1000, 2000, 4000, 5000]
 threads_list = [1,2,4,8,16,32]
+repeat = 100
 
 pos_min, pos_max = -50, 50
 vel_min, vel_max = -1, 1
@@ -43,18 +42,23 @@ for N in N_list:
     bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
     for threads in threads_list:
-        start_time = time.perf_counter()
-        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, threads)
-        end_time = time.perf_counter()
-        count += 1
+        duration_list = []
 
-        percentage_bar(count, int(len(N_list)*len(threads_list)))
+        for i in range(repeat):
+            start_time = time.perf_counter()
+            nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, threads)
+            end_time = time.perf_counter()
+            count += 1
 
-        duration = end_time - start_time
+            duration_list.append(end_time - start_time)
+
+            percentage_bar(count, int(len(N_list)*len(threads_list))*repeat, N)
 
         times_N.append(N)
         times_thread.append(threads)
-        times.append(duration)
+        times.append(np.average(duration_list))
+
+
 
 print("")
 true_time = {}
@@ -71,7 +75,11 @@ for i in range(len(times_N)):
         speedup.append(true_time[N_val]/times_val)
         efficiency.append((true_time[N_val]/times_val)/threads_val)
 
-with open(file = "times.csv", mode = 'w') as file:
-    file.write('N,threads,time_elapsed,speedup,efficiency\n')
-    for i in range(len(times_N)):
-        file.write(f'{times_N[i]},{times_thread[i]},{times[i]},{speedup[i]},{efficiency[i]}\n')
+df = pd.DataFrame({
+    "N": times_N,
+    "threads": times_thread,
+    "time_elapsed": times,
+    "speedup": speedup,
+    "efficiency": efficiency
+})
+df.to_csv("times.csv", index=False)

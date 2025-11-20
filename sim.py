@@ -31,11 +31,29 @@ def print_bodies(bodies_container, N):
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
-def percentage_bar(current, total, bar_length=30):
+def percentage_bar(current, total, start_time,bar_length=30):
     percent = (current + 1) / total
     filled_length = int(bar_length * percent)
     bar = f"{GREEN}{'█' * filled_length}{RED}{' ' * (bar_length - filled_length)}{RESET}"
-    print(f'\r|{bar}| {percent*100:.01f}% Completed', end='')
+    now = time.time()
+    elapsed = now - start_time
+
+    # Avoid division by zero
+    if current == 0:
+        eta = 0
+    else:
+        steps_per_sec = current / elapsed
+        remaining = total - current
+        eta = remaining / steps_per_sec
+
+    # Format ETA as h:m:s
+    eta_h = int(eta // 3600)
+    eta_m = int((eta % 3600) // 60)
+    eta_s = int(eta % 60)
+    eta_str = f"{eta_h:02d}:{eta_m:02d}:{eta_s:02d}"
+
+    print(f"\r|{bar}| {percent*100:5.1f}%  ETA: {eta_str}", end="")
+
 
 
 def main():
@@ -61,58 +79,31 @@ def main():
     # ---------------- Precomputing Positions ----------------
 
     print("Precomputing positions...")
+    start_time = time.time()
     all_positions = []  # list of tuples (xs, ys, zs)
     for step in range(NUM_STEPS):
-        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 8)
+        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 16)
 
         if step % FRAMES_BETWEEN_UPDATES == 0:
             xs = [bodies.get_body(i).x for i in range(N)]
             ys = [bodies.get_body(i).y for i in range(N)]
             zs = [bodies.get_body(i).z for i in range(N)]
             all_positions.append((xs, ys, zs))
-            percentage_bar(step, NUM_STEPS)
+            percentage_bar(step, NUM_STEPS, start_time)
 
     print(f"\nPrecomputation complete: {len(all_positions)} frames")
 
-    # ---------------- Setup plot ----------------
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    rows = []
 
-    ax.set_box_aspect([AXIS_MAX - AXIS_MIN]*3)
-    ax.set_xlim(AXIS_MIN, AXIS_MAX)
-    ax.set_ylim(AXIS_MIN, AXIS_MAX)
-    ax.set_zlim(AXIS_MIN, AXIS_MAX)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    for step_idx, (xs, ys, zs) in enumerate(all_positions):
+        for i in range(N):
+            rows.append([step_idx * FRAMES_BETWEEN_UPDATES, i, xs[i], ys[i], zs[i]])
 
-    # Initialize scatter with first frame
-    xs, ys, zs = all_positions[0]
-    scatter = ax.scatter(xs, ys, zs, s=2)
-
-    # ---------------- Animating Plot ----------------
-    print("\nAnimating...")
-    def update(frame):
-        xs, ys, zs = all_positions[frame]
-        scatter._offsets3d = (xs, ys, zs)
-        ax.set_title(f"Step {frame*FRAMES_BETWEEN_UPDATES}")  # Optional title
-        return scatter,
-    
-    ani = FuncAnimation(
-        fig, 
-        update, 
-        frames=len(all_positions), 
-        interval=25,  # milliseconds between frames
-        blit=False    # Must be False for 3D scatter plots
-    )
-
-    plt.show()
-    print("Simulation Complete")
-    return ani
-
+    df = pd.DataFrame(rows, columns=["step", "body", "x", "y", "z"])
+    df.to_csv("nbody_locations.csv", index=False)
 
 if __name__ == '__main__':
-    ani = main()
+    main()
 
 
 
