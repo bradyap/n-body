@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 import time
-import nbody_OpenMP
+import nbody
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -33,7 +33,7 @@ efficiency = []
 
 count = 0
 for N in N_list:
-    bodies = nbody_OpenMP.BodiesContainer(N)
+    bodies = nbody.BodiesContainer(N)
 
     pos = np.random.uniform(pos_min, pos_max, (N, 3))
     vel = np.random.uniform(vel_min, vel_max, (N, 3))
@@ -42,14 +42,14 @@ for N in N_list:
     bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
     for threads in threads_list:
-        duration = nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, threads)
+        duration = nbody.benchmark_omp(bodies, DT, G, threads, 100)
         count += 1
 
         percentage_bar(count, int(len(N_list)*len(threads_list)), N)
 
         times_N.append(N)
         times_thread.append(threads)
-        times.append(np.average(duration))
+        times.append(duration)
 
 print("")
 true_time = {}
