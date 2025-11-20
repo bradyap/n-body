@@ -63,7 +63,7 @@ def main():
     print("Precomputing positions...")
     all_positions = []  # list of tuples (xs, ys, zs)
     for step in range(NUM_STEPS):
-        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 32)
+        nbody_OpenMP.compute_forces_OpenMP(bodies, DT, G, 8)
 
         if step % FRAMES_BETWEEN_UPDATES == 0:
             xs = [bodies.get_body(i).x for i in range(N)]

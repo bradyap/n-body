@@ -1,8 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "nbody_OpenMP.h"
-
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -100,7 +98,7 @@ void compute_forces_open_mp(BodiesContainer& container, double dt, double G, int
 
     #pragma omp parallel num_threads(number_threads)
     {
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
         for (int i = 0; i < n; ++i) { // Iterate through each body
             double ax = 0.0, ay = 0.0, az = 0.0; // Stores accel temporarily
 

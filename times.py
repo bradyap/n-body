@@ -75,5 +75,3 @@ with open(file = "times.csv", mode = 'w') as file:
     file.write('N,threads,time_elapsed,speedup,efficiency\n')
     for i in range(len(times_N)):
         file.write(f'{times_N[i]},{times_thread[i]},{times[i]},{speedup[i]},{efficiency[i]}\n')
-
-print(true_time)
