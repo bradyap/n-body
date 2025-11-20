@@ -248,4 +248,7 @@ PYBIND11_MODULE(nbody, m) {
     m.def("compute_forces_serial", &compute_forces_serial, "Computes gravitational forces serially");
     m.def("compute_forces_threaded", &compute_forces_threaded, "Computes gravitational forces using std::thread");
     m.def("compute_forces_omp", &compute_forces_omp, "Computes gravitational forces using OpenMP");
+    m.def("benchmark_serial", &benchmark_serial, "Benchmark serial computation");
+    m.def("benchmark_threaded", &benchmark_threaded, "Benchmark threaded computation");
+    m.def("benchmark_omp", &benchmark_omp, "Benchmark OpenMP computation");
 }
