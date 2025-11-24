@@ -42,7 +42,7 @@ for N in N_list:
     bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
     for threads in threads_list:
-        duration = nbody.benchmark_omp(bodies, DT, G, threads, 100)
+        duration = nbody.benchmark_threaded(bodies, DT, G, threads, 100)
         count += 1
 
         percentage_bar(count, int(len(N_list)*len(threads_list)), N)

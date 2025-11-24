@@ -17,7 +17,7 @@ plt.ylabel("Speedup")
 plt.title("Threads vs Speedup")
 plt.grid(True)
 plt.legend()
-plt.savefig("Threads_vs_Speedup_Plot.png")
+plt.savefig("Thread_Metrics/Threads_vs_Speedup_Plot.png")
 
 #Threads vs Efficiency
 plt.figure(figsize=(10,6))
@@ -32,7 +32,7 @@ plt.ylabel("Efficiency")
 plt.title("Threads vs Efficiency")
 plt.grid(True)
 plt.legend()
-plt.savefig("Threads_vs_Efficiency_Plot.png")
+plt.savefig("Thread_Metrics/Threads_vs_Efficiency_Plot.png")
 
 #Threads vs Time
 plt.figure(figsize=(10,6))
@@ -47,4 +47,4 @@ plt.ylabel("Time")
 plt.title("Threads vs Time")
 plt.grid(True)
 plt.legend()
-plt.savefig("Threads_vs_Time_Plot.png")
+plt.savefig("Thread_Metrics/Threads_vs_Time_Plot.png")
