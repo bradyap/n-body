@@ -158,7 +158,7 @@ void compute_forces_omp(BodiesContainer& container, double dt, double G, int num
 
     #pragma omp parallel num_threads(number_threads) 
     {
-        #pragma omp for schedule(dynamic)
+        #pragma omp for schedule(static)
         for (int i = 0; i < n; ++i) { // Iterate through each body
             double ax = 0.0, ay = 0.0, az = 0.0; // Stores accel temporarily
 

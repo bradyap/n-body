@@ -13,13 +13,12 @@ def percentage_bar(current, total, N, bar_length=30,):
     percent = (current) / total
     filled_length = int(bar_length * percent)
     bar = f"{GREEN}{'█' * filled_length}{RED}{' ' * (bar_length - filled_length)}{RESET}"
-    print(f'\r|{bar}| {percent*100:.01f}% Completed  N = {N}', end='')
+    print(f'\r|{bar}| {percent*100:.01f}% Completed  N = {N}', end='', flush=True)
 
 G = 0.001
 DT = 0.001
 N_list = [500, 1000, 2000, 4000, 5000]
 threads_list = [1,2,4,8,16,32]
-repeat = 100
 
 pos_min, pos_max = -50, 50
 vel_min, vel_max = -1, 1
@@ -30,6 +29,7 @@ times_thread = []
 times = []
 speedup = []
 efficiency = []
+computational_cost = []
 
 count = 0
 for N in N_list:
@@ -39,9 +39,11 @@ for N in N_list:
     vel = np.random.uniform(vel_min, vel_max, (N, 3))
     mass = np.random.uniform(mass_min, mass_max, N)
 
-    bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
+    #bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
 
     for threads in threads_list:
+        bodies.set_all(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass)
+
         duration = nbody.benchmark_threaded(bodies, DT, G, threads, 100)
         count += 1
 
@@ -66,11 +68,14 @@ for i in range(len(times_N)):
         speedup.append(true_time[N_val]/times_val)
         efficiency.append((true_time[N_val]/times_val)/threads_val)
 
+    computational_cost.append(times_val/(N_val**2))
+
 df = pd.DataFrame({
     "N": times_N,
     "threads": times_thread,
     "time_elapsed": times,
     "speedup": speedup,
-    "efficiency": efficiency
+    "efficiency": efficiency,
+    "computational_cost":computational_cost
 })
 df.to_csv("times.csv", index=False)
