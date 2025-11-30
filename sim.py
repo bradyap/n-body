@@ -10,7 +10,7 @@ from pathlib import Path
 import nbody
 
 SIM_OPTIONS_PATH = Path(__file__).resolve().parent / "sims"
-DEFAULT_FNAME = "system.csv"
+DEFAULT_FNAME = "test_bodies.csv"
 
 DEFAULT_G = 0.001
 DEFAULT_DT = 0.001
@@ -22,6 +22,7 @@ COMPUTE_MODES = {
 }
 
 AXIS_MIN, AXIS_MAX = -400.0, 400.0
+SIZE_MIN, SIZE_MAX = 20, 200
 FRAMES_BETWEEN_UPDATES = 100
 
 def prompt_run_config():
@@ -89,17 +90,12 @@ def run_sim(bodies, N, calc_func, threads, dt, grav_const):
     fig.patch.set_facecolor('black')
     ax = fig.add_subplot(111, projection='3d')
 
-    mass_values = np.array(
-        [bodies.get_body(i).m for i in range(N)], dtype=np.float64)
-    log_masses = np.log10(mass_values)
-    mass_norm = (log_masses - log_masses.min()) / \
-        (log_masses.max() - log_masses.min() + 1e-12)
-    size_min, size_max = 30, 260
-    marker_sizes = size_min + (size_max - size_min) * mass_norm
-    cmap = plt.cm.plasma
-    norm = colors.Normalize(vmin=log_masses.min(), vmax=log_masses.max())
-    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-    sm.set_array([])
+    mass_values = np.array([bodies.get_body(i).m for i in range(N)], dtype=np.float64)
+    log_masses = np.log10(mass_values) # Log scale for better size distribution
+    # Scale sizes between set min and max
+    mass_norm = (log_masses - log_masses.min()) / (log_masses.max() - log_masses.min())
+    marker_sizes = SIZE_MIN + (SIZE_MAX - SIZE_MIN) * mass_norm
+    cmap = plt.cm.plasma # Color map to colorize based on mass
     
     def style_axes():
         ax.set_box_aspect([AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN, AXIS_MAX - AXIS_MIN])
