@@ -3,8 +3,11 @@
 !*.*
 !*/
 
-# Exception for makefile
+# Exceptions
 !Makefile
+!README.md
+!LICENSE
+!sims/
 
 #vscode
 .vscode
