@@ -14,12 +14,13 @@ DEFAULT_FNAME = "test_bodies.csv"
 
 DEFAULT_G = 0.001
 DEFAULT_DT = 0.001
-DEFAULT_THREADS = 1
+DEFAULT_THREADS = 10
 COMPUTE_MODES = {
     "Serial": nbody.compute_forces_serial,
     "Threaded": nbody.compute_forces_threaded,
     "OpenMP": nbody.compute_forces_omp,
 }
+DEFAULT_COMPUTE_MODE = "OpenMP"
 
 AXIS_MIN, AXIS_MAX = -400.0, 400.0
 SIZE_MIN, SIZE_MAX = 20, 200
@@ -32,7 +33,7 @@ def prompt_run_config():
     root.configure(padx=16, pady=16)
 
     # get selected options from gui
-    mode_var = tk.StringVar(value="Serial")
+    mode_var = tk.StringVar(value=DEFAULT_COMPUTE_MODE)
     file_var = tk.StringVar(value=(SIM_OPTIONS_PATH / DEFAULT_FNAME).name)
     threads_var = tk.IntVar(value=DEFAULT_THREADS)
     g_var = tk.DoubleVar(value=DEFAULT_G)

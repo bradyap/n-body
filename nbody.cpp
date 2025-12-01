@@ -65,7 +65,7 @@ void compute_forces_serial(BodiesContainer& container, double dt, double G) {
             double dz = bodies[j].z - bodies[i].z;
 
             // Compute gravitational acceleration on body i due to body j
-            double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+            double r2 = dx*dx + dy*dy + dz*dz + 1e-3;
             double r = std::sqrt(r2);
             double invr3 = 1.0 / (r * r * r);
             double accel_coeff = G * bodies[j].m * invr3;
@@ -109,7 +109,7 @@ void compute_forces_threaded(BodiesContainer& container, double dt, double G, in
                 double dz = bodies[j].z - bodies[i].z;
 
                 // Compute gravitational acceleration on body i due to body j
-                double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+                double r2 = dx*dx + dy*dy + dz*dz + 1e-3;
                 double r = std::sqrt(r2);
                 double invr3 = 1.0 / (r * r * r);
                 double accel_coeff = G * bodies[j].m * invr3;
@@ -171,7 +171,7 @@ void compute_forces_omp(BodiesContainer& container, double dt, double G, int num
                 double dz = bodies[j].z - bodies[i].z;
 
                 // Compute gravitational acceleration on body i due to body j
-                double r2 = dx*dx + dy*dy + dz*dz + 1e-10;
+                double r2 = dx*dx + dy*dy + dz*dz + 1e-3;
                 double r = std::sqrt(r2);
                 double invr3 = 1.0 / (r * r * r);
                 double accel_coeff = G * bodies[j].m * invr3;
