@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 df = pd.read_csv("times.csv")
-file = "Thread_Metrics"
+file = "OpenMP_Metrics"
 
 #Threads vs Speedup Plot
 plt.figure(figsize=(10,6))
