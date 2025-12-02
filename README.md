@@ -8,3 +8,5 @@ Basic n-body sim developed for a university project. Usage is self-explanatory -
 5. Install dependencies: pip install -r requirements.txt
 6. Build the project: make
 7. Run the simulation: python3 sim.py
+
+Note: sim.py will only work on systems with a graphical interface. The benchmark functions (times.py, times_serial.py) and their associated plotting functions will work just fine without.
