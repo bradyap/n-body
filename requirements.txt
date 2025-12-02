@@ -1,16 +1,5 @@
-contourpy
-cycler
-fonttools
-kiwisolver
 matplotlib
 numpy
-packaging
 pandas
-pillow
 pybind11
-pyparsing
-python-dateutil
-pytz
-six
 tk
-tzdata
