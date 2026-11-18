@@ -13,6 +13,7 @@ struct Body {
     double x, y, z; // Position
     double vx, vy, vz; // Velocity
     double m; // Mass
+    double pad; 
 };
 
 // Wrapper class for the vector of bodies
